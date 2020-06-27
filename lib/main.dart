@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import './models/GoPlanTab.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import './blocks/game_block.dart';
 import 'dart:async';
+import './widgets/main_window.dart';
+import './widgets/welcome_screen.dart';
 
 void main() {
   runApp(TicTacToeApp());
@@ -9,13 +13,20 @@ void main() {
 class TicTacToeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Tic Tac Toe Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    return ChangeNotifierProvider(
+      create: (context) => GameBlock(),
+      child: MaterialApp(
+        title: 'Tic Tac Toe Demo',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: HomePage(title: 'Tic Tac Toe'),
       ),
-      home: HomePage(title: 'Tic Tac Toe'),
     );
   }
 }
@@ -29,64 +40,24 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool _welcomeMessage = false;
-  static const List<GoPlanTab> _tabs = const <GoPlanTab>[
-    const GoPlanTab(title: "Start Game", icon: Icons.gamepad),
-    const GoPlanTab(title: "Score", icon: Icons.score),
-  ];
+  Widget _widget = WelcomeScreen();
 
   _welcomeCountdown() {
-    if (!_welcomeMessage) {
-      Timer(Duration(seconds: 2), () {
-        setState(() {
-          _welcomeMessage = true;
-        });
+    Timer(Duration(seconds: 2), () {
+      setState(() {
+        _widget = MainWindow(widget.title);
       });
-    }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     _welcomeCountdown();
-    return _welcomeMessage
-        ? DefaultTabController(
-            length: 2,
-            child: Scaffold(
-              appBar: AppBar(
-                centerTitle: true,
-                title: Text(widget.title),
-                bottom: TabBar(
-                  isScrollable: true,
-                  tabs: _tabs.map((GoPlanTab tab) {
-                    return Container(
-                      margin: const EdgeInsets.only(left: 42, right: 42),
-                      child: Tab(
-                        text: tab.title,
-                        icon: Icon(tab.icon),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              body: TabBarView(
-                children: _tabs.map((GoPlanTab tab) {
-                  return Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text("content"),
-                  );
-                }).toList(),
-              ),
-            ))
-        : Scaffold(
-            body: Center(
-              child: Text(
-                "Welcome to Goalplan Tic-Tac-Toe",
-                style: TextStyle(
-                  fontSize: 24,
-                  color: Colors.deepOrange,
-                ),
-              ),
-            ),
-          );
+    return AnimatedSwitcher(
+      duration: Duration(
+        milliseconds: 1200,
+      ),
+      child: _widget,
+    );
   }
 }
